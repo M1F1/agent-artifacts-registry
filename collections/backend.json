@@ -1,0 +1,1 @@
+{"artifacts":[{"name":"postgres","type":"mcp"},{"name":"tabnine-postgres","type":"mcp"}],"collections":["base"],"com.m1f1.legacy-pins":{"code-review":"a1b2c3d"},"name":"backend","schema_version":1,"summary":"Backend team set: extends base with database tooling."}
