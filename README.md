@@ -10,6 +10,23 @@ compiled index as the source of truth; do not edit generated lock/index files by
 Every artifact declares its own license. Security evidence describes installation risk and never
 constitutes a guarantee that an artifact is safe.
 
+## Optional usage analytics
+
+This registry advertises its own `M1F1/agent-artifacts-registry` GitHub Issues endpoint for
+privacy-bounded AART usage reports. New AART configurations default to `prompt`: after an artifact
+operation the user sees the exact redacted payload and may decline both creating and opening the
+Issue. `automatic` reporting is never enabled by this registry and still requires an explicit
+user or organization destination.
+
+For baskets spanning multiple registries, AART partitions results before serialization. This
+registry receives only results for artifacts selected through its configured aliases; it never
+receives another registry's results or the user's local source aliases. Aliases or refs that resolve
+to this same analytics endpoint are deduplicated into one proposed Issue.
+
+The validation and dashboard workflows both use the reviewed AART `v1.2.0` reporting implementation
+rather than following `main`. Valid reports are labeled and aggregated daily into a static GitHub
+Pages dashboard. Reporting and dashboard failures never alter artifact installation outcomes.
+
 ## Residuality collection
 
 `collections/residuality.json` groups fourteen MIT-licensed artifacts imported from the immutable
