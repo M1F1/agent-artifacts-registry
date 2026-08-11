@@ -23,6 +23,20 @@ The import does not add `requires_aart` to these artifacts. That field is reserv
 runtime dependency on an AART executable capability, not for content provenance or for the
 collection convenience itself.
 
+The thirteen executable/orchestrating skills declare Python `>=3.11.0` in the advisory namespaced
+`com.m1f1.runtime-requirements` metadata; the theory-only guideline does not. This metadata remains
+visible to `aart marketplace health` but never prevents marketplace discovery or installation.
+The consuming repository owns its Python environment and can compare its own inventory with:
+
+```sh
+aart marketplace health reference/collection/residuality \
+  --environment .agent-artifacts/runtime-environment.json --json
+```
+
+This registry keeps an example Python 3.11 inventory at that path for its payload tests. AART does
+not probe the interpreter, install Python, or enforce the report; runtime execution and any CI
+policy remain the responsibility of the repository subscribing to the registry.
+
 ## Compatibility policy
 
 Artifact-level `requires_aart` is an explicit capability contract, not an automatically generated

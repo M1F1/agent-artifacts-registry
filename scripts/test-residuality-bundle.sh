@@ -51,6 +51,19 @@ expected.update(
         "residual-run-sequential",
     )
 )
+runtime_extension = "com.m1f1.runtime-requirements"
+python_requirement = {
+    "schema_version": 1,
+    "requirements": [
+        {
+            "id": "python",
+            "version": {"min_inclusive": "3.11.0"},
+            "reason": (
+                "Residuality uses Python 3.11+ standard-library features such as tomllib."
+            ),
+        }
+    ],
+}
 if collection["name"] != "residuality" or members != expected or len(members) != 14:
     raise SystemExit("residuality collection does not contain the declared fourteen artifacts")
 
@@ -72,6 +85,10 @@ for kind, name in members:
         raise SystemExit(f"{kind}/{name} does not declare Copy and Symlink modes")
     if "requires_aart" in manifest:
         raise SystemExit(f"{kind}/{name} must not gain an incidental requires_aart bound")
+    if kind == "skill" and manifest.get(runtime_extension) != python_requirement:
+        raise SystemExit(f"{kind}/{name} must declare the reviewed advisory Python requirement")
+    if kind == "guideline" and runtime_extension in manifest:
+        raise SystemExit(f"{kind}/{name} must not claim an unnecessary Python requirement")
     provenance = json.loads(
         (root / "artifacts" / kind / name / "provenance.json").read_text(encoding="utf-8")
     )["origin"]

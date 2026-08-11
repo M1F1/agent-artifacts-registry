@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "name": "residuality-python-3.11",
+  "capabilities": [
+    {"id": "python", "version": "3.11.0"}
+  ]
+}
