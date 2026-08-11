@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 env:
-  AART_LATEST_VERSION: 1.1.1
+  AART_LATEST_VERSION: 1.2.0
 jobs:
   registry-quality:
     strategy:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ${{ vars.AART_REPOSITORY || 'M1F1/agent-artifacts' }}
-          ref: ${{ vars.AART_REF || 'v1.1.1' }}
+          ref: ${{ vars.AART_REF || 'v1.2.0' }}
           path: .aart-tool
           persist-credentials: false
       - run: python -m pip install --no-deps ./.aart-tool
@@ -36,3 +36,11 @@ jobs:
           aart registry test --source .
           --compatibility ${{ matrix.compatibility }}
           --latest-version "$AART_LATEST_VERSION"
+      - name: Test advisory runtime health without installation gating
+        run: ./scripts/test-runtime-health.sh
+      - name: Set up Residuality runtime
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Test Residuality bundle in Copy and Symlink layouts
+        run: ./scripts/test-residuality-bundle.sh
