@@ -24,8 +24,9 @@ receives another registry's results or the user's local source aliases. Aliases 
 to this same analytics endpoint are deduplicated into one proposed Issue.
 
 The validation and dashboard workflows both use the reviewed AART `v1.2.0` reporting implementation
-rather than following `main`. Valid reports are labeled and aggregated daily into a static GitHub
-Pages dashboard. Reporting and dashboard failures never alter artifact installation outcomes.
+through their dedicated `AART_ANALYTICS_REF` override rather than following `main` or the registry
+quality-tool ref. Valid reports are labeled and aggregated daily into a static GitHub Pages
+dashboard. Reporting and dashboard failures never alter artifact installation outcomes.
 
 ## Residuality collection
 
@@ -68,7 +69,7 @@ functional minimum at `1.1.0`, where their documented marketplace/source command
 Advisory runtime metadata does not raise either floor: `1.1.1` preserves the namespaced extension
 and continues to browse and install the Residuality artifacts even though it has no health command.
 
-Registry CI installs the explicitly pinned, released AART `1.2.0` tool and runs the canonical
+Registry CI installs the explicitly pinned, released AART `1.3.0` tool and runs the canonical
 format, strict/frozen validate, lock, build, audit, minimum/latest compatibility, and advisory
 runtime-health gates. The minimum compatibility point remains the registry's declared `1.1.1`,
 while `latest` and the quality tool advance deliberately; neither follows `main` or an executable
