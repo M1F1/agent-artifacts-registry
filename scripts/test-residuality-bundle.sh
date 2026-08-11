@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 set -eu
 
+export PYTHONDONTWRITEBYTECODE=1
+
 REGISTRY_ROOT=$(CDPATH= cd "$(dirname "$0")/.." && pwd -P)
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/aart-residuality.XXXXXX")
 TEST_ROOT=$(CDPATH= cd "$TEST_ROOT" && pwd -P)
