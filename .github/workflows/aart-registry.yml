@@ -5,6 +5,8 @@ on:
     branches: [main]
 permissions:
   contents: read
+env:
+  AART_LATEST_VERSION: 1.1.1
 jobs:
   registry-quality:
     strategy:
@@ -21,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ${{ vars.AART_REPOSITORY || 'M1F1/agent-artifacts' }}
-          ref: ${{ vars.AART_REF || 'main' }}
+          ref: ${{ vars.AART_REF || 'v1.1.1' }}
           path: .aart-tool
           persist-credentials: false
       - run: python -m pip install --no-deps ./.aart-tool
@@ -30,4 +32,7 @@ jobs:
       - run: aart registry lock --source . --check
       - run: aart registry build --source . --check
       - run: aart registry audit --source .
-      - run: aart registry test --source . --compatibility ${{ matrix.compatibility }}
+      - run: >-
+          aart registry test --source .
+          --compatibility ${{ matrix.compatibility }}
+          --latest-version "$AART_LATEST_VERSION"

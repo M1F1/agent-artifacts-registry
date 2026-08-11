@@ -1,358 +1,247 @@
 ---
 name: agent-artifacts
-description: Guide users and maintainers through the agent-artifacts CLI (aart). Use when Codex needs to help decide, plan, install, link, update, check, uninstall, validate, curate bundles, or maintain upstream-tracked AI artifacts. The skill requires gathering requirements first, explaining available CLI options, proposing a plan, getting user confirmation, and only then executing mutating commands.
+description: Guide people, agents, and registry maintainers through agent-artifacts (aart) 1.1 configured sources and federated marketplaces. Use when choosing or managing registry-git, source-git, or source-local sources; inspecting source health and trust; browsing or installing artifacts through the human TUI or agent-safe CLI/JSON; selecting Copy or Symlink and project or user scope; running lifecycle/setup operations; or compiling and auditing an AART registry.
 ---
 
-# Agent-Artifacts CLI Decision Skill
+# Use Agent-Artifacts 1.1
 
-Use this skill to help a user or catalog maintainer work with `agent-artifacts` (`aart`), the
-CLI that installs team AI artifacts: skills, guidelines, MCP servers, hooks, and memory files.
+Treat `aart` as the executable for consuming configured artifact sources and maintaining registry
+checkouts. The executable does not carry a catalog. Marketplace content comes from explicit
+`registry-git`, `source-git`, or `source-local` entries in the effective user configuration.
 
-Your job is not only to run commands. Your job is to help the user choose the right path, make
-the tradeoffs visible, and execute only after the user confirms the proposed plan.
+## Choose the interface
 
-## Non-Negotiable Operating Rules
+- For a person at an interactive terminal, recommend the guided TUI by running `aart`. The Sources
+  stage reviews configured origins and health before marketplace selection, installation, and
+  optional setup.
+- For an agent or automation, never drive the TUI. Use explicit `source`, `marketplace`,
+  `registry`, or `security` subcommands with `--json` when supported.
+- Prefer canonical `source` and `marketplace` commands. Treat `list`, `install`, `status`, `check`,
+  `update`, `uninstall`, and `setup` as legacy compatibility commands unless the user explicitly
+  needs that surface.
+- Parse JSON and check the process exit code. Do not scrape the human renderer.
 
-- Never launch the bare TUI (`aart` with no args). Use explicit subcommands.
-- Use `--json` for commands that support it and parse JSON instead of scraping human text.
-- Use `--dry-run` before mutating commands unless the user explicitly says to skip preview.
-- Use `--yes` only after the user confirms the plan for a mutating operation.
-- Never use `--force` unless the user explicitly authorizes overwrites/removals after seeing
-  the risk.
-- Check exit codes: `0` ok, `1` error, `2` usage, `3` network, `4` conflict, `5` corrupt
-  manifest.
-- Treat `.agent-artifacts/manifest.json` as the installed-state source of truth. Do not infer
-  install mode only from files on disk.
-- Present example commands in fenced `sh` code blocks that users can copy directly.
-- When the user has not already chosen a harness, use `tabnine` as the first profile example.
-- If the user asks for an action that may edit their project or catalog, first gather enough
-  requirements, present options, recommend a plan, and ask for confirmation.
+## Safety contract
 
-## Conversation Workflow
+- Inspect before changing state. Use a mutating marketplace command without `--yes` to review its
+  plan, then add `--yes` only after the user authorizes the shown effects.
+- Do not invent `--dry-run` for canonical marketplace commands; absence of `--yes` is their review
+  mode.
+- `source add` has no separate finalize flag. Confirm the exact alias, kind, credential-free
+  origin/path, ref, and default choice before running it.
+- Never use `--force`, `--prune`, setup authorization flags, or source migration `--apply` without
+  explicit approval for that exact review.
+- Treat organization policy as final. Do not work around required sources, allowed origins,
+  minimum trust, scope restrictions, or setup capability limits.
+- Treat `.agent-artifacts/manifest.json` as installed-state evidence. Do not infer ownership,
+  mode, source, or drift from destination files alone.
+- Never place credentials in a source URL, command example, generated file, log, or diagnostic.
 
-Follow this sequence before executing anything that changes files.
+## Inspect and configure sources
 
-1. **Classify the user**
-   - **User mode**: The user is inside an application repo and wants to install, link, update,
-     check, or remove artifacts for their agent harness.
-   - **Maintainer mode**: The user is editing the `agent-artifacts` catalog repo, adding or
-     updating artifacts, bundles, or upstream tracking metadata.
-   - **Developer mode**: The user is changing the CLI implementation or tests.
-
-2. **Gather requirements**
-   Ask only the missing questions that materially affect the command:
-   - target project directory, if not cwd;
-   - harness profile: `tabnine`, `claude`, `opencode`, or `vibe`;
-   - artifact name, bundle name, type filter, or "all";
-   - desired mode: copy install, live-link install, update, check, uninstall, maintainer import;
-   - source expectation: installed catalog, local catalog checkout, remote catalog, upstream URL;
-   - safety constraints: dry-run only, allow writes, allow force, preserve local changes.
-
-3. **Inspect current state when useful**
-   Prefer a local, non-mutating command before recommending changes:
-   ```sh
-   aart list --json
-   aart status --json
-   aart list --source . --json
-   ```
-
-4. **Present options**
-   Show the user 2-4 realistic choices. Include what each option changes, its risks, and when
-   it is appropriate. Mark one as recommended when the requirements point clearly that way.
-
-5. **Propose a plan and ask for confirmation**
-   Include exact commands, whether they are dry-run or mutating, and expected outcomes. Do not
-   run mutating commands until the user confirms.
-
-6. **Execute confirmed plan**
-   Run commands, parse outputs, summarize results, and explain next steps. If an exit code is
-   non-zero, stop and explain before trying another mutating command.
-
-## User Mode: Installing Into A Project
-
-Normal users should rely on the catalog bundled with the installed `aart` tool. Do not push
-remote catalog details onto normal users unless they ask for them.
-
-### Discover Available Artifacts
-
-Use when the user asks what can be installed:
+Start with local, non-mutating inspection:
 
 ```sh
-aart list --json
-aart list --type skill --json
-aart list --bundle backend --json
+aart source list --json
+aart source health --json
+aart source doctor --json
 ```
 
-Summarize artifact names, types, descriptions when present, and bundle contents.
+Use one of these source kinds:
 
-### Install From The Installed Catalog
+- `registry-git`: a federated registry with committed lock and compiled index;
+- `source-git`: a direct native source in a Git repository;
+- `source-local`: a mutable local native source at an absolute path.
 
-Use for ordinary installs:
-
-```sh
-aart install code-review --profile tabnine --dry-run --json
-aart install code-review --profile tabnine --yes --json
-
-aart install --bundle backend --profile tabnine,claude --dry-run --json
-aart install --bundle backend --profile tabnine,claude --yes --json
-```
-
-Decision notes:
-- Use a named artifact when the user knows exactly what they want.
-- Use a bundle when the user wants a team-standard setup.
-- Use `--all` only when the user explicitly wants the entire catalog for a profile.
-- If an artifact is incompatible with a profile, explain whether it is a usage error (explicit
-  by-name) or a warning/skip (bundle or `--all`).
-
-### Live-Link Install
-
-Use `--link` when the user wants local/live propagation instead of a copied snapshot.
-
-Default command:
+After the user approves the exact origin, configure and validate one fresh snapshot:
 
 ```sh
-aart install code-review --profile tabnine --link --dry-run --json
-aart install code-review --profile tabnine --link --yes --json
-```
-
-Explain the mechanics:
-- `--link` is opt-in and local-only.
-- Without `--source`, `aart` uses the catalog located beside the installed tool itself.
-- If `aart` was installed editable from a local `agent-artifacts` checkout, symlinks point back
-  to that checkout.
-- Pass `--source DIR` only when the user wants a different local catalog checkout.
-
-```sh
-aart install code-review --source /path/to/agent-artifacts --profile tabnine --link --dry-run --json
-```
-
-- Changes propagate only when the local source path changes: local edits, `git pull`, branch
-  switch, or `aart upstream update` in the catalog.
-- Use `aart status --json` to show `install.mode`, link targets, and broken/retargeted links.
-
-Never present `--repo` as a live-link option. Remote snapshots cannot be symlink install
-targets.
-
-### Check, Update, And Uninstall
-
-Use status before changing installed artifacts:
-
-```sh
-aart status --json
-```
-
-For freshness:
-
-```sh
-aart check --json
-```
-
-For update:
-
-```sh
-aart update --dry-run --json
-aart update --yes --json
-aart update --prune --dry-run --json
-```
-
-For uninstall:
-
-```sh
-aart uninstall code-review --profile tabnine --dry-run --json
-aart uninstall code-review --profile tabnine --yes --json
-```
-
-Handle conflicts:
-- Exit `4` means local drift/conflict. Explain the `.agent-artifacts-new` sidecar or changed
-  symlink state.
-- Ask before re-running with `--force`.
-- For symlink installs, uninstall removes the destination symlink, not the source target.
-
-## Maintainer Mode: Curating The Catalog
-
-Maintainers edit the catalog repo, validate it, manage bundles, and optionally track upstream
-origins in `upstreams.json`. Maintainer commands may use `--source`, `--repo`, `GITHUB_TOKEN`,
-and `aart upstream ...`.
-
-### Configure GitHub Access
-
-Use `GITHUB_TOKEN` for private repos, GitHub Enterprise repos, and higher rate limits. On
-macOS, recommend Keychain:
-
-```sh
-/usr/bin/security add-generic-password -U \
-  -a "$USER" \
-  -s GITHUB_TOKEN \
-  -w
-
-export GITHUB_TOKEN="$(/usr/bin/security find-generic-password \
-  -a "$USER" \
-  -s GITHUB_TOKEN \
-  -w 2>/dev/null)"
-```
-
-Tell the user not to put the raw token in shell config files. For GitHub Enterprise, use
-`GITHUB_API_URL` or per-source `api_url`.
-
-### Validate A Local Catalog
-
-Run from the catalog repo root:
-
-```sh
-aart list --source . --json
-aart list --source . --type skill --json
-make validate
-```
-
-Use `--source .` so the CLI reads the working tree, not the installed package's bundled
-catalog.
-
-### Create Or Edit Artifacts
-
-Catalog layout:
-
-| Type | Path | Required entry point |
-|------|------|----------------------|
-| skill | `skills/<name>/` | `SKILL.md` with matching `name:` frontmatter |
-| guideline | `guidelines/<name>.md` | optional frontmatter |
-| mcp | `mcp/<name>.json` or `mcp/<name>/` | JSON with `name` and `server` |
-| hook | `hooks/<name>/` | `hook.json` with `name`, `events`, and `command` |
-| memory | `memory/<name>.md` | optional frontmatter and optional `mode` |
-
-After edits:
-
-```sh
-aart install <name> --source . --profile tabnine --dry-run --json
-make validate
-```
-
-### Create Or Edit Bundles
-
-Bundles live at `bundles/<name>.json`. They support:
-- `description`: human summary;
-- `extends`: other bundles to compose;
-- `includes`: artifact lists by type (`skills`, `guidelines`, `mcp`, `hooks`, `memory`);
-- `pins`: artifact name to branch/tag/SHA.
-
-Validate bundle changes:
-
-```sh
-aart list --source . --bundle backend --json
-aart install --bundle backend --source . --profile tabnine,claude --dry-run --json
-make validate
-```
-
-### Adopt One External Artifact
-
-Use when the maintainer has a specific GitHub URL:
-
-```sh
-aart upstream add skill/domain-modeling \
-  https://github.com/mattpocock/skills/tree/main/skills/engineering/domain-modeling \
-  --dry-run --json
-```
-
-Explain:
-- `/tree/` URLs vendor directory artifacts such as skills, hooks, and directory MCP artifacts.
-- `/blob/` URLs vendor single-file artifacts such as guidelines, flat MCP, and memory files.
-- The `TYPE/NAME` key must match the upstream artifact's own declared name.
-- Use `--ref`, `--path`, `--force`, and `--dry-run` as needed.
-
-After preview and confirmation:
-
-```sh
-aart upstream add skill/domain-modeling <github-url> --json
-```
-
-### Scan And Batch Import External Repos
-
-Use `scan` when the maintainer does not know what a repo contains:
-
-```sh
-aart upstream scan https://github.com/org/superpowers/tree/main --json
-```
-
-Use `import` after presenting candidates:
-
-```sh
-aart upstream import https://github.com/org/superpowers/tree/main --dry-run --json
-aart upstream import https://github.com/org/superpowers/tree/main \
-  --select skill/code-review \
-  --select memory/house \
-  --bundle superpowers \
-  --bundle-mode append \
+aart source add \
+  --alias team \
+  --kind registry-git \
+  --location https://github.example/team/agent-artifacts-registry.git \
+  --ref main \
+  --default \
   --json
 ```
 
-Explain import flags:
-- `--select TYPE/NAME`: import specific candidates.
-- `--bundle NAME`: create/update a bundle with imported artifacts.
-- `--bundle-description TEXT`: set description for created/replaced bundle.
-- `--bundle-mode append|replace|fail`: choose existing-bundle behavior.
-- `--mode auto|manifest|heuristic`: choose discovery mode.
-- `--interactive`: prompt for candidate selection only when an interactive terminal is safe.
+Use `--no-default` when the new source should not become the presentation default. A default
+registry changes ranking only; it never resolves a collision or shadows another source.
 
-### Check And Update Tracked Upstreams
-
-Use for artifacts already tracked in `upstreams.json`:
+Synchronize existing aliases instead of re-adding them:
 
 ```sh
-aart upstream check --all --json
-aart upstream check --bundle backend --json
-aart upstream update skill/code-review --dry-run --json
-aart upstream update --bundle backend --dry-run --json
+aart source sync --alias team --json
+aart source health --alias team --json
 ```
 
-After confirmation:
+Synchronization publishes a validated source snapshot. It never changes already installed bytes
+or retargets installed symlinks. If `source doctor` reports a pre-1.1 source-store layout, review
+its proposed rebinds before authorizing:
 
 ```sh
-aart upstream update skill/code-review --json
-aart upstream update --bundle backend --json
+aart source doctor --apply --json
 ```
 
-Review working-tree diffs before committing. Never delete local catalog work just because an
-upstream path disappeared.
+No configured source is a valid state for non-content operations. Marketplace and installation
+operations fail closed until required sources are configured and healthy. Never substitute the
+`aart` executable checkout or its installation directory as an implicit source.
 
-## Option Presentation Template
+## Interpret health and trust
 
-When the user request is ambiguous, respond with a concise choice set:
+Keep source health separate from artifact trust:
+
+- Health reports current, stale, offline, invalid, incompatible, or missing source state, plus
+  revision and snapshot age.
+- `--offline` may use an already validated last-known-good snapshot and verified cached object. It
+  must not hide an offline source or fetch missing content.
+- Trust is derived locally from configured origin, immutable evidence, registry review, and
+  organization policy. Never accept a trust label claimed by an artifact.
+- A mutable local source is `local`; a direct Git source is `direct-source`; an approved registry
+  entry may be `registry-reviewed`; exact policy-designated registry identity may become
+  `company-reviewed`; missing or rejected review is `unverified`.
+- User-scope installation may require a higher trust class than project scope.
+
+Use the qualified coordinate and evidence returned by the marketplace:
 
 ```text
-I see three viable paths:
-1. Install from the reviewed catalog (recommended): ...
-2. Live-link from a local checkout: ...
-3. Maintainer import/update: ...
-
-My recommendation: ...
-Proposed plan:
-- Run ...
-- Preview ...
-- If you confirm, run ...
-
-Please confirm which path you want.
+SOURCE/TYPE/NAME@VERSION
 ```
 
-Then wait. Do not execute mutating commands before confirmation.
+An unqualified `TYPE/NAME` is valid only when exactly one configured source provides it.
 
-## Failure Handling
+## Browse and install as an agent
 
-These exit codes are implemented by the CLI. Recovery is the agent's job: stop, explain the
-message, and ask before trying a riskier command.
+Browse the federated marketplace:
 
-- `1 error`: generic failure or unexpected local IO/planning problem, such as "cannot read",
-  "could not hash", or an internal invalid mode. Do not retry blindly; inspect stdout/stderr,
-  identify the file or operation that failed, and ask before repairing local files.
-- `2 usage`: bad invocation, unknown artifact/bundle/profile, unsupported profile/type
-  combination, or incompatible flags. Ask for corrected inputs.
-- `3 network`: remote source/check/import failure. Explain repo/API/token access, mention
-  `GITHUB_TOKEN` when private GitHub access is plausible, and suggest retry only when the
-  failure looks transient.
-- `4 conflict`: local drift, merge collision, replace-over-existing-file, import destination
-  conflict, or changed symlink path. Summarize what would be overwritten or removed and ask
-  before using `--force`.
-- `5 corrupt manifest`: `.agent-artifacts/manifest.json` could not be parsed. Stop and ask
-  whether to inspect, back up, edit, restore, or remove that manifest; there is no automatic
-  repair command.
-- Some error paths print plain text even when `--json` was passed. If parsing JSON fails,
-  fall back to the exit code plus stdout/stderr, then explain the failure instead of retrying
-  blindly.
+```sh
+aart marketplace list --json
+```
+
+Summarize source alias and health, qualified coordinate, compatibility, effective trust,
+installation risk, installed state, version, and relevant provenance. Keep `unknown` or
+`not-scanned` risk visible; do not turn missing evidence into a safety claim.
+
+Review a project-scoped Copy install, then finalize only after approval:
+
+```sh
+aart marketplace install \
+  team/skill/agent-artifacts@2.0.0 \
+  --profile tabnine \
+  --project /path/to/project \
+  --scope project \
+  --mode copy \
+  --json
+
+aart marketplace install \
+  team/skill/agent-artifacts@2.0.0 \
+  --profile tabnine \
+  --project /path/to/project \
+  --scope project \
+  --mode copy \
+  --yes \
+  --json
+```
+
+Choose scope deliberately:
+
+- `project` targets one project directory and is the default;
+- `user` targets the selected harness's user configuration and may face stricter trust policy.
+
+Choose mode deliberately:
+
+- `copy` is the default and installs a snapshot whose bytes do not change after source sync;
+- `symlink` links eligible tree/file effects to the exact immutable object in AART's managed
+  content-addressed store;
+- merge and managed-configuration effects remain copies, so a Symlink request may produce mixed
+  actual modes;
+- source sync never retargets a managed link; only an explicit reviewed update can do that.
+
+Do not describe Symlink as a link into `site-packages`, the executable checkout, a moving Git
+branch, or the source's `current` pointer.
+
+## Lifecycle operations
+
+Use the installed record and its exact source subscription:
+
+```sh
+aart marketplace status --profile tabnine --scope project --project /path/to/project --json
+aart marketplace update --profile tabnine --scope project --project /path/to/project --json
+aart marketplace uninstall team/skill/agent-artifacts --profile tabnine \
+  --scope project --project /path/to/project --json
+```
+
+`marketplace status` executes immediately because it is read-only. Update and uninstall first
+produce a review; re-run the approved request with `--yes` to finalize it. Important outcomes
+include `current`, `update-available`, `source-unavailable`, `removed-upstream`, `drifted`,
+`broken`, `retargeted`, `conflict`, `changed`, and `removed`.
+
+- Status is local and does not fetch.
+- Update uses only the source subscription recorded at installation. It never falls through to a
+  same-named artifact from another source.
+- A missing upstream artifact is preserved unless the user explicitly reviews `--prune`.
+- Drift or foreign/retargeted links conflict. Explain the exact ownership evidence before asking
+  about `--force`.
+- Uninstall removes only proven owned effects and preserves unrelated shared configuration.
+
+## Setup after installation
+
+Setup is a separate reviewed operation after payload installation:
+
+```sh
+aart marketplace setup team/mcp/example \
+  --profile tabnine \
+  --scope project \
+  --project /path/to/project \
+  --json
+```
+
+Review the declared capabilities, trust, custom entrypoint, and every effect. Use
+`--approve-setup-effects`, `--authorize-untrusted-source`, or `--authorize-custom-entrypoint` only
+when the user explicitly accepts that exact risk, then finalize with `--yes`. Declined or failed
+setup does not roll back a successful payload installation.
+
+## Maintain a registry checkout
+
+Run maintainer commands against an explicit writable Git checkout. They never commit or push:
+
+```sh
+aart registry format --source .
+aart registry lock --source .
+aart registry build --source .
+aart registry validate --source . --strict --frozen
+aart registry audit --source .
+aart registry test --source . --compatibility all --latest-version 1.1.1
+```
+
+After generating lock/index, use read-only gates to prove the checkout is current:
+
+```sh
+aart registry format --source . --check
+aart registry validate --source . --strict --frozen
+aart registry lock --source . --check
+aart registry build --source . --check
+aart registry audit --source .
+aart registry test --source . --compatibility all --latest-version 1.1.1
+```
+
+Edit registry-owned packages under `artifacts/TYPE/NAME`. Keep honest license and provenance:
+omit provenance for content owned by this registry, and retain normalized provenance for content
+actually imported from elsewhere. Regenerate `aart.lock.json` and `aart.index.json`; never hand-edit
+them. Review the Git diff before committing.
+
+CI should install a reviewed AART executable and run the same format, strict/frozen validation,
+lock, build, audit, and minimum/latest compatibility gates with read-only repository permissions.
+
+## Handle failures
+
+- `0`: operation completed as described by its structured outcome.
+- `1`: generic validation, IO, planning, drift, or health failure. Inspect diagnostics before any
+  retry.
+- `2`: invalid invocation or selection. Correct the request; do not guess.
+- `3`: network/source acquisition failure. Preserve configured and installed state.
+- `4`: conflict requiring a newly reviewed force decision.
+- `5`: corrupt installed manifest. Stop and ask whether to inspect, back up, restore, or remove it.
+
+If JSON is unavailable on an error path, report the exit code plus sanitized stdout/stderr. Never
+retry a mutating command blindly.
