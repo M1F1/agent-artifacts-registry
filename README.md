@@ -10,6 +10,19 @@ compiled index as the source of truth; do not edit generated lock/index files by
 Every artifact declares its own license. Security evidence describes installation risk and never
 constitutes a guarantee that an artifact is safe.
 
+## Residuality collection
+
+`collections/residuality.json` groups fourteen MIT-licensed artifacts imported from the immutable
+reviewed commit `576c6b953f45f9561f12ba6b76b7b6a5da74a96b` of
+[`M1F1/residues-architecture-framework`](https://github.com/M1F1/residues-architecture-framework):
+one theory guideline, the shared `using-residues` kernel, nine ordered analysis stages, and three
+pipeline drivers. The collection keeps the kernel beside its consumers and is tested in both Copy
+and Symlink installed layouts.
+
+The import does not add `requires_aart` to these artifacts. That field is reserved for an actual
+runtime dependency on an AART executable capability, not for content provenance or for the
+collection convenience itself.
+
 ## Compatibility policy
 
 Artifact-level `requires_aart` is an explicit capability contract, not an automatically generated

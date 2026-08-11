@@ -36,3 +36,5 @@ jobs:
           aart registry test --source .
           --compatibility ${{ matrix.compatibility }}
           --latest-version "$AART_LATEST_VERSION"
+      - name: Test Residuality bundle in Copy and Symlink layouts
+        run: ./scripts/test-residuality-bundle.sh
