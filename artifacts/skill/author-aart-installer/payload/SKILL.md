@@ -17,10 +17,14 @@ configured `registry-git`, `source-git`, or `source-local` source.
 2. For a registry-owned package, locate it at `artifacts/TYPE/NAME`. Copy
    `assets/installer.template.json` to `<package>/setup/installer.json` and make its `artifact`
    identity exactly `TYPE/NAME`.
-3. Use `assets/installer.schema.json` as the authoring schema. Declare the smallest capability set
-   and prefer shared version-1 modules to custom code.
-4. Put only documentation links in `SETUP.md`. Use credential-free HTTPS URLs and explain restart,
-   platform, environment, and external-tool limitations.
+3. Use `assets/installer.schema.json` as the authoring schema. `schema_version` and
+   `protocol_version` are both `2`; the superseded `1`/`1` pair is refused everywhere. Declare the
+   smallest capability set and prefer shared modules to custom code.
+4. Write `SETUP.md` at the **package root**, beside `artifact.json` — not inside `setup/`. A
+   version-2 recipe requires it, AART derives its path rather than reading a declared one, and it
+   is the route a person follows when they decline the automation. Use credential-free HTTPS URLs
+   and explain restart, platform, environment, and external-tool limitations. A custom entrypoint
+   must open with `# AART manual setup: see ../SETUP.md`.
 5. Validate the descriptor with this skill's strict parser from the registry root:
 
    ```sh
@@ -36,7 +40,7 @@ configured `registry-git`, `source-git`, or `source-local` source.
    aart registry build --source .
    aart registry validate --source . --strict --frozen
    aart registry audit --source .
-   aart registry test --source . --compatibility all --latest-version 1.1.1
+   aart registry test --source . --compatibility all
    ```
 
    Run format/lock/build again with `--check` after regeneration. Never hand-edit
@@ -88,4 +92,7 @@ configured `registry-git`, `source-git`, or `source-local` source.
   verifies, records a redacted receipt, and rolls back completed reversible effects on failure.
 - Payload installation success remains valid when setup is declined or incomplete.
 
-See `references/protocol-v1.md` for the shared modules and lifecycle contract.
+See `references/protocol-v2.md` for the shared modules and lifecycle contract.
+
+A registry publishing a version-2 recipe must declare a `requires_aart` window admitting `2.0.0`:
+no released `1.x` executable can validate a package-root `SETUP.md`.

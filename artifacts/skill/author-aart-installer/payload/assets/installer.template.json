@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "protocol_version": 1,
+  "schema_version": 2,
+  "protocol_version": 2,
   "artifact": "mcp/example",
   "purpose": "Configure the example artifact.",
   "platforms": ["darwin"],

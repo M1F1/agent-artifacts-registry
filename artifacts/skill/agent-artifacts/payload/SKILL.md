@@ -211,7 +211,7 @@ aart registry lock --source .
 aart registry build --source .
 aart registry validate --source . --strict --frozen
 aart registry audit --source .
-aart registry test --source . --compatibility all --latest-version 1.1.1
+aart registry test --source . --compatibility all
 ```
 
 After generating lock/index, use read-only gates to prove the checkout is current:
@@ -222,7 +222,7 @@ aart registry validate --source . --strict --frozen
 aart registry lock --source . --check
 aart registry build --source . --check
 aart registry audit --source .
-aart registry test --source . --compatibility all --latest-version 1.1.1
+aart registry test --source . --compatibility all
 ```
 
 Edit registry-owned packages under `artifacts/TYPE/NAME`. Keep honest license and provenance:
