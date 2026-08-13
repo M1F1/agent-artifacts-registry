@@ -12,7 +12,7 @@ Keychain service, so it does not overwrite the public GitHub MCP credential or s
    aart source add \
      --alias community \
      --kind registry-git \
-     --location https://github.com/M1F1/agent-artifacts-registry-2.git \
+     --location https://github.com/M1F1/agent-artifacts-registry.git \
      --ref main \
      --no-default
    aart
@@ -49,5 +49,5 @@ test -n "${GITHUB_ENTERPRISE_PERSONAL_ACCESS_TOKEN:-}"
 For Claude Code, restart Claude and run `/mcp`; the `github-enterprise` server should become ready.
 For Tabnine CLI, restart it and run `/mcp` for the same status check.
 
-On Linux the MCP JSON remains installable, but setup protocol v1 has no Linux secret-store adapter.
+On Linux the MCP JSON remains installable, but setup v2 has no Linux secret-store adapter.
 Use your platform credential manager outside AART and keep the token out of committed configuration.
