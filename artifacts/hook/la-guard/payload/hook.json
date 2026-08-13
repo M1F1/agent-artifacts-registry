@@ -1,1 +1,1 @@
-{}
+{"command":"${SCRIPT_DIR}/guard.sh","matcher":"Bash","name":"la-guard"}
