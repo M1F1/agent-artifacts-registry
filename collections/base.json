@@ -1,1 +1,0 @@
-{"artifacts":[{"name":"code-review","type":"skill"},{"name":"python-style","type":"guideline"},{"name":"block-secrets","type":"hook"},{"name":"house","type":"memory"}],"name":"base","schema_version":1,"summary":"Base bundle: essential skills, guidelines, hooks, and the house memory file."}

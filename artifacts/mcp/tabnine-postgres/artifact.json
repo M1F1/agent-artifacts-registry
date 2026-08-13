@@ -1,1 +1,0 @@
-{"compatibility":{"platforms":["darwin","linux"],"profiles":["tabnine"]},"install":{"effects":["merge-json"],"modes":["copy","symlink"],"scopes":["project","user"]},"license":"MIT","name":"tabnine-postgres","payload":{"format":"aart-mcp-v1","root":"payload"},"schema_version":1,"summary":"Let Tabnine inspect and query PostgreSQL databases.","type":"mcp","version":"1.0.0"}

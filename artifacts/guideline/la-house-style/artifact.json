@@ -1,0 +1,1 @@
+{"compatibility":{"platforms":["darwin"],"profiles":["claude"]},"install":{"effects":["write-file"],"modes":["copy"],"scopes":["project"]},"name":"la-house-style","payload":{"format":"aart-guideline-v1","root":"payload"},"schema_version":1,"summary":"Live acceptance guideline fixture","type":"guideline","version":"1.0.0"}

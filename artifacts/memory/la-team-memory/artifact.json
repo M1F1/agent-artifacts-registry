@@ -1,0 +1,1 @@
+{"compatibility":{"platforms":["darwin"],"profiles":["claude"]},"install":{"effects":["managed-block","write-file"],"modes":["copy"],"scopes":["project"]},"name":"la-team-memory","payload":{"format":"aart-memory-v1","root":"payload"},"schema_version":1,"summary":"Live acceptance memory fixture","type":"memory","version":"1.0.0"}
