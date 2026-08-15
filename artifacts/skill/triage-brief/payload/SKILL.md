@@ -117,6 +117,22 @@ If two of seven acceptance criteria were never walked, the brief says two of sev
 A brief that reports the good half is worth less than no brief, because the reader now has to verify
 it, which is the work you were doing for them.
 
+### Write it so a tired reader understands it on the first pass
+
+A brief is read by someone deciding under time pressure, often not in their first language. Writing
+that sounds good and reads slowly is a failure of the brief, not a matter of taste.
+
+- Short sentences. One idea each.
+- Plain words. *Blast radius* → *how many people it affects*. *Falsifies* → *makes wrong*.
+- Say the thing, then explain it. Not the reverse.
+- For anything important, use the same three headings every time: **What goes wrong**, **Why it
+  matters**, **Cost to fix**. Repetition is a feature; the reader learns the shape once.
+- No irony, no rhetorical questions, no clever contrasts. They cost the reader a re-read.
+- Show a measurement as a small block of before/after lines, not as a sentence about a measurement.
+
+Test it: read your own headings only. If they alone tell someone what to do, the brief works. If the
+meaning is hidden inside the paragraphs, rewrite the headings.
+
 ### Correct in place, and say you corrected
 
 When you get a fact wrong mid-brief, fix the row and add a line saying which fact was wrong and why.
